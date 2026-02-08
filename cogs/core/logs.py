@@ -6,6 +6,7 @@ import traceback
 from utils.webhook_logger import send_webhook_log
 from utils.mongo_logger import save_log
 
+
 logger = logging.getLogger("penny")
 
 class Logs(commands.Cog):

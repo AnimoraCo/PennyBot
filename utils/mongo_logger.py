@@ -1,40 +1,17 @@
-import os
+from utils.mongo import get_collection
 import datetime
-from motor.motor_asyncio import AsyncIOMotorClient
+import logging
 
-MONGO_URI = os.getenv("MONGO_URI")
-DB_NAME = os.getenv("LOG_DB_NAME", "bot_logs")
+logger = logging.getLogger("penny")
 
-client = AsyncIOMotorClient(MONGO_URI)
-db = client[DB_NAME]
-collection = db["logs"]
 
-async def save_log(
-    level: str,
-    message: str,
-    *,
-    guild_id: int | None = None,
-    guild_name: str | None = None,
-    user_id: int | None = None,
-    user_name: str | None = None,
-    source: str | None = None
-):
-    if level not in ("WARNING", "ERROR", "CRITICAL"):
+async def save_log(collection: str, data: dict):
+    db = get_db()
+    if db is None:
         return
 
-    doc = {
-        "level": level,
-        "message": message,
-        "guild": {
-            "id": guild_id,
-            "name": guild_name
-        },
-        "user": {
-            "id": user_id,
-            "name": user_name
-        },
-        "source": source,
-        "timestamp": datetime.datetime.utcnow()
-    }
-
-    await collection.insert_one(doc)
+    try:
+        data["created_at"] = datetime.datetime.utcnow()
+        await db[collection].insert_one(data)
+    except Exception as e:
+        logger.error(f"Erro ao salvar log no MongoDB: {e}")

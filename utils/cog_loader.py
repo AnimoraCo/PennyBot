@@ -1,13 +1,17 @@
 import os
+import logging
 
-def load_cogs(bot, base_path="cogs"):
-    for root, _, files in os.walk(base_path):
+logger = logging.getLogger("penny")
+
+async def load_cogs(bot):
+    for root, _, files in os.walk("cogs"):
         for file in files:
             if file.endswith(".py") and not file.startswith("_"):
-                module = (
-                    root.replace("/", ".")
-                        .replace("\\", ".")
-                    + f".{file[:-3]}"
-                )
-                bot.load_extension(module)
-                print(f"📦 Cog carregado: {module}")
+                path = os.path.join(root, file)
+                module = path.replace("\\", ".").replace("/", ".")[:-3]
+
+                try:
+                    await bot.load_extension(module)
+                    logger.info(f"📦 Cog carregado: {module}")
+                except Exception as e:
+                    logger.error(f"❌ Erro ao carregar {module}: {e}")
